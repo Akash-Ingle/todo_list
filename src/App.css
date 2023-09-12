@@ -99,3 +99,8 @@ figcaption {
   display: flex;
   align-items: center;
 }
+
+.eachItem .todo-btn {
+  display: flex;
+  gap: 10px; /* Adjust the value to increase or decrease the space between icons */
+}

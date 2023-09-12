@@ -1,26 +1,69 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import todo from '../images/todo.png'
 import '../App.css'
 
+// to get the data from localStorage 
+const getLocalItems = () => {
+    let list = localStorage.getItem('lists');
+    console.log(list)
+    if(list){
+        return JSON.parse(localStorage.getItem('lists'));
+    }
+    else {
+        return [];
+    }
+}
+
 const Todo = () => {
   const [inputData , setInputData] = useState('');
-  const [items , setItems] = useState([]);
+  const [items , setItems] = useState(getLocalItems());
+  const [toggleSubmit, setToggleSubmit] = useState(true);
+  const [isEditItem, setIsEditItem] = useState(null);
   const addItem = () => {
-    if(inputData){
-        setItems([...items, inputData])
+    if(!inputData){
+        alert('Please fill some data');
+    }
+    else if(inputData && !toggleSubmit) {
+        setItems(
+            items.map((elem) => {
+                if(elem.id === isEditItem){
+                    return{...elem, name:inputData}
+                }
+                return elem;
+            })
+        )
+        setToggleSubmit(true);
+        setInputData('');
+        setIsEditItem(null);
+    }
+    else{
+        const allInputData = {id: new Date().getTime().toString(), name: inputData}
+        setItems([...items, allInputData])
         setInputData('');
     }
   }
-  const deleteItem = (id) => {
-    console.log(id);
-    const updateditems = items.filter((elem, ind) => {
-        return ind !== id;
+  const deleteItem = (index) => {
+    const updateditems = items.filter((elem) => {
+        return index !== elem.id;
     })
     setItems(updateditems);
+  }
+  const editItem = (id) => {
+    let newEditItem = items.find((elem) => {
+        return id === elem.id
+    })
+    console.log(newEditItem);
+    setToggleSubmit(false);
+    setInputData(newEditItem.name);
+    setIsEditItem(id);
   }
   const removeAll = () => {
     setItems([]);
   }
+//   add data to localStorage 
+  useEffect(() => {
+    localStorage.setItem('lists', JSON.stringify(items))
+  }, [items])
   return (
     <>
         <div className='main-div'>
@@ -37,16 +80,22 @@ const Todo = () => {
                         value={inputData}
                         onChange={(e) => setInputData(e.target.value)}
                         />
-                        <i className="fa-solid fa-plus add-btn" title='Add Item' onClick={addItem}></i>
+                        {
+                            toggleSubmit ? <i className="fa-solid fa-plus add-btn" title='Add Item' onClick={addItem}></i>
+                                         : <i className="far fa-edit add-btn" title='Update Item' onClick={addItem}></i>
+                        }
                     </div>
                 </div>
                 <div className="showItems">
                     {
-                        items.map((elem, ind) => {
+                        items.map((elem) => {
                             return (
-                                <div className="eachItem" key={ind}>
-                                <h3>{elem}</h3>
-                                <i className="far fa-trash-alt add-btn" title='Delete Item' onClick={() => deleteItem(ind)}></i>
+                                <div className="eachItem" key={elem.id}>
+                                    <h3>{elem.name}</h3>
+                                    <div className="todo-btn">
+                                        <i className="far fa-edit add-btn" title='Edit Item' onClick={() => editItem(elem.id)}></i>
+                                        <i className="far fa-trash-alt add-btn" title='Delete Item' onClick={() => deleteItem(elem.id)}></i>
+                                    </div>
                                 </div>
                             )
                         })
